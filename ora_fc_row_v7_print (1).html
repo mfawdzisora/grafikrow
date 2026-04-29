@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--blue:#2f81f7;--muted:#8b949e;--green:#238636;--red:#da3633}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:sans-serif;padding:16px}
+.wrap{max-width:1150px;margin:auto}
+.header{background:var(--card);padding:14px 20px;border:1px solid var(--border);border-radius:10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.header h2{font-size:15px;font-weight:700}
+.hbtns{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:none;padding:7px 13px;border-radius:6px;font-weight:600;cursor:pointer;color:#fff;font-size:12px}
+.btn-green{background:var(--green)}.btn-gray{background:#6e7681}.btn-red{background:var(--red)}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 15px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px}
+.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.box{background:var(--card);border:1px solid var(--border);padding:20px 22px;border-radius:10px}
+.info-bar{background:#21262d;border:1px solid var(--border);border-radius:7px;padding:9px 14px;margin-bottom:14px;font-size:12px;color:var(--muted)}
+.info-bar strong{color:var(--text)}
+.seg-block{margin-bottom:22px}
+.seg-header{display:grid;grid-template-columns:175px 1fr 185px;align-items:start;gap:14px;margin-bottom:6px}
+.seg-name{font-size:13px;font-weight:700}
+.seg-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.seg-val{font-size:13px;font-weight:700}
+.seg-pct{font-size:11px;color:var(--muted);margin-top:2px}
+.bars-area{padding-left:175px;display:flex;flex-direction:column;gap:4px}
+.bar-row{display:flex;align-items:center;gap:14px}
+.bar-track{flex:1;height:24px;background:#21262d;border-radius:4px;position:relative;border:1px solid #30363d;overflow:hidden}
+.bar-meta{width:185px;font-size:11px;color:var(--muted);white-space:nowrap}
+.dup-label{font-size:10px;color:var(--muted);margin-bottom:2px;padding-left:1px}
+.blok{position:absolute;height:100%;background:var(--blue);opacity:.85}
+.total-row{margin-top:22px;padding-top:16px;border-top:2px solid var(--border)}
+.empty{color:var(--muted);font-size:12px;font-style:italic;padding:6px 0}
+
+/* File panel — di bawah, tidak ikut print */
+.file-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin-top:12px}
+.file-panel-title{font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;margin-bottom:4px;background:#21262d;border:1px solid var(--border)}
+.file-item:last-child{margin-bottom:0}
+.file-info{display:flex;align-items:center;gap:8px;font-size:12px}
+.file-name{color:var(--text);font-weight:600;max-width:500px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-count{color:var(--muted);font-size:11px}
+.file-del{border:none;background:transparent;color:#6e7681;cursor:pointer;font-size:14px;padding:2px 7px;border-radius:4px;line-height:1;transition:all .15s}
+.file-del:hover{background:#3d1a1a;color:#f85149}
+.no-file{font-size:12px;color:var(--muted);font-style:italic}
+
+/* ── PRINT ── */
+@media print{
+  @page{margin:15mm}
+  body{
+    background:#fff !important;
+    color:#000 !important;
+    padding:0;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  /* Sembunyikan kontrol & file panel */
+  .header .hbtns,
+  .tabs,
+  .info-bar,
+  .file-panel{ display:none !important }
+
+  .header{
+    background:#fff !important;
+    border:1px solid #ccc !important;
+    border-radius:6px;
+    padding:10px 14px;
+  }
+  .header h2{color:#000 !important;font-size:14px}
+
+  .wrap,.box{
+    max-width:100%;
+    background:#fff !important;
+    border:1px solid #ccc !important;
+    border-radius:6px;
+    padding:12px 16px;
+  }
+
+  .seg-name{color:#000 !important}
+  .seg-sub,.seg-pct,.bar-meta,.dup-label,.empty{color:#555 !important}
+  .seg-val{color:#000 !important}
+
+  /* Track bar */
+  .bar-track{
+    background:#e8e8e8 !important;
+    border:1px solid #ccc !important;
+  }
+
+  /* Blok tersurvei — tetap biru */
+  .blok{
+    background:#2f81f7 !important;
+    opacity:1 !important;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+
+  /* Total bar track */
+  #total-bar{
+    background:#e8e8e8 !important;
+    border:1px solid #ccc !important;
+  }
+
+  .total-row{border-top:2px solid #ccc !important}
+  #total-m{color:#2f81f7 !important}
+  #total-p{color:#555 !important}
+
+  /* Divider antar segment */
+  .seg-block{border-bottom:1px solid #eee;padding-bottom:12px;margin-bottom:12px}
+  .seg-block:last-child{border-bottom:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div><h2>📍 MONITORING JALUR ROW</h2></div>
+    <div class="hbtns">
+      <button class="btn btn-red" onclick="resetAll()">Reset Semua</button>
+      <button class="btn btn-gray" onclick="window.print()">🖨 Print</button>
+      <input type="file" id="upload" hidden multiple accept=".xlsx">
+      <button class="btn btn-green" onclick="document.getElementById('upload').click()">📂 Import Excel</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('all',this)">Monitoring Jalur</button>
+    <button class="tab" onclick="switchTab('Bersemak',this)">Data Bersemak</button>
+    <button class="tab" onclick="switchTab('Ada Pelanggaran',this)">Finding</button>
+  </div>
+
+  <!-- KONTEN UTAMA (ikut print) -->
+  <div class="box">
+    <div id="info-area"></div>
+    <div id="display"></div>
+    <div class="total-row">
+      <div style="display:grid;grid-template-columns:175px 1fr 185px;gap:14px;align-items:center;color:var(--blue)">
+        <div style="font-size:13px;font-weight:700">TOTAL PROGRESS</div>
+        <div class="bar-track" style="height:32px" id="total-bar"></div>
+        <div>
+          <div style="font-size:13px;font-weight:700" id="total-m">0 m</div>
+          <div style="font-size:11px;color:var(--muted)" id="total-p">0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILE PANEL — di bawah, tidak ikut print -->
+  <div class="file-panel">
+    <div class="file-panel-title">📁 File yang diimport</div>
+    <div id="file-list-ui"><div class="no-file">Belum ada file diimport</div></div>
+  </div>
+</div>
+
+<script>
+const SEGS=[
+  {name:"Segment 1",    len:2000},
+  {name:"Segment 2",    len:16600},
+  {name:"Segment 3",    len:56800},
+  {name:"Segment 4",    len:33600},
+  {name:"Segment 5",    len:12900},
+  {name:"Segment 6",    len:39500},
+  {name:"Segment 7",    len:47000},
+  {name:"Segment 8",    len:12800},
+  {name:"Segment 9",    len:9000},
+  {name:"Segment 10/12",len:36700},
+  {name:"Segment 11a",  len:12000},
+  {name:"Segment 11b",  len:26500}
+];
+const INTERVAL=100;
+let fileStore=[];
+let activeMode='all';
+
+function parseKP(v){
+  if(v==null||v==='')return null;
+  const s=v.toString().trim();
+  if(s.includes('+')){const[km,m]=s.split('+');return(parseFloat(km)||0)*1000+(parseFloat(m)||0);}
+  const n=parseFloat(s);return isNaN(n)?null:n;
+}
+function normSeg(n){return n?n.toString().trim().toLowerCase().replace(/\s+/g,' '):''}
+function detectCol(keys,cands){
+  for(const c of cands){const f=keys.find(k=>k.trim().toLowerCase()===c.toLowerCase());if(f)return f;}
+  for(const c of cands){const f=keys.find(k=>k.trim().toLowerCase().includes(c.toLowerCase()));if(f)return f;}
+  return cands[0];
+}
+function cluster(arr){
+  if(!arr.length)return[];
+  const res=[];let cur=[arr[0]];
+  for(let i=1;i<arr.length;i++){
+    if(arr[i]-arr[i-1]<=INTERVAL)cur.push(arr[i]);
+    else{res.push(cur);cur=[arr[i]];}
+  }
+  res.push(cur);return res;
+}
+function renderTrack(kpArr,kpMin,segLen){
+  return cluster(kpArr).map(cl=>{
+    const left=Math.max(0,((cl[0]-kpMin)/segLen)*100);
+    const w=Math.max(0.4,((cl[cl.length-1]-cl[0]+INTERVAL)/segLen)*100);
+    const tip=cl.length===1?`KP ${cl[0]}`:`KP ${cl[0]}–${cl[cl.length-1]} (${cl.length*INTERVAL}m)`;
+    return`<div class="blok" title="${tip}" style="left:${left.toFixed(3)}%;width:${Math.min(w,100-left).toFixed(3)}%"></div>`;
+  }).join('');
+}
+
+document.getElementById('upload').addEventListener('change',async function(e){
+  for(const file of e.target.files){
+    if(fileStore.find(f=>f.name===file.name)){alert(`File "${file.name}" sudah diimport.`);continue;}
+    const ab=await file.arrayBuffer();
+    const wb=XLSX.read(ab);
+    const rows=[];
+    wb.SheetNames.forEach(sn=>{
+      XLSX.utils.sheet_to_json(wb.Sheets[sn]).forEach(row=>{
+        const r={_file:file.name};
+        Object.keys(row).forEach(k=>r[k.trim()]=typeof row[k]==='string'?row[k].trim():row[k]);
+        rows.push(r);
+      });
+    });
+    fileStore.push({name:file.name,count:rows.length,rows});
+  }
+  e.target.value='';
+  renderFileList();render(activeMode);
+});
+
+function deleteFile(idx){
+  if(!confirm(`Hapus file "${fileStore[idx].name}"?`))return;
+  fileStore.splice(idx,1);
+  renderFileList();render(activeMode);
+}
+function renderFileList(){
+  const el=document.getElementById('file-list-ui');
+  if(!fileStore.length){el.innerHTML='<div class="no-file">Belum ada file diimport</div>';return;}
+  el.innerHTML=fileStore.map((f,i)=>`
+    <div class="file-item">
+      <div class="file-info">
+        <span>📄</span>
+        <span class="file-name" title="${f.name}">${f.name}</span>
+        <span class="file-count">${f.count} baris</span>
+      </div>
+      <button class="file-del" onclick="deleteFile(${i})" title="Hapus file ini">✕</button>
+    </div>`).join('');
+}
+function resetAll(){
+  if(fileStore.length&&!confirm('Reset semua data?'))return;
+  fileStore=[];renderFileList();render('all');
+}
+function switchTab(mode,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');activeMode=mode;render(mode);
+}
+
+function render(mode){
+  const area=document.getElementById('display');
+  area.innerHTML='';
+  const masterData=fileStore.flatMap(f=>f.rows);
+
+  if(!masterData.length){
+    area.innerHTML='<div class="empty">Belum ada data. Import file Excel terlebih dahulu.</div>';
+    document.getElementById('total-bar').innerHTML='';
+    document.getElementById('total-m').textContent='0 m';
+    document.getElementById('total-p').textContent='0%';
+    document.getElementById('info-area').innerHTML='';
+    return;
+  }
+
+  const keys=Object.keys(masterData[0]);
+  const KP_COL=detectCol(keys,['KP','kp','Chainage','chainage']);
+  const SEG_COL=detectCol(keys,['Segment','segment']);
+  const ANA_COL=detectCol(keys,['Analisa ROW','Analisa Row','analisa row','Analisa']);
+
+  let totalMeter=0;
+  const totalLen=SEGS.reduce((a,b)=>a+b.len,0);
+
+  SEGS.forEach(seg=>{
+    const sn=normSeg(seg.name);
+    const segRows=masterData.filter(d=>{
+      if(normSeg(d[SEG_COL])!==sn)return false;
+      const ana=(d[ANA_COL]||'').toString().trim();
+      return mode==='all'||ana===mode;
+    });
+
+    const kpFileSet={};
+    segRows.forEach(d=>{
+      const kp=parseKP(d[KP_COL]);
+      if(kp===null)return;
+      if(!kpFileSet[kp])kpFileSet[kp]=new Set();
+      kpFileSet[kp].add(d._file);
+    });
+
+    const allKPs=Object.keys(kpFileSet).map(Number).sort((a,b)=>a-b);
+    if(!allKPs.length){
+      const block=document.createElement('div');
+      block.className='seg-block';
+      block.innerHTML=`
+        <div class="seg-header">
+          <div><div class="seg-name">${seg.name}</div><div class="seg-sub">${seg.len.toLocaleString('id')} m total</div></div>
+          <div></div>
+          <div><div class="seg-val">0 m</div><div class="seg-pct">0% dari ${seg.len.toLocaleString('id')} m</div></div>
+        </div>
+        <div class="bars-area"><div class="empty">Tidak ada data</div></div>`;
+      area.appendChild(block);
+      return;
+    }
+
+    const kpMin=allKPs[0];
+    const meterSeg=Math.min(allKPs.length*INTERVAL,seg.len);
+    const pct=((meterSeg/seg.len)*100).toFixed(1);
+    totalMeter+=meterSeg;
+
+    const maxLayers=Math.max(...Object.values(kpFileSet).map(s=>s.size));
+    let barsHTML='';
+    for(let layer=0;layer<maxLayers;layer++){
+      const kpLayer=allKPs.filter(kp=>kpFileSet[kp].size>layer);
+      if(!kpLayer.length)continue;
+      const track=renderTrack(kpLayer,kpMin,seg.len);
+      const meta=`${kpLayer.length} titik · ${(kpLayer.length*INTERVAL).toLocaleString('id')} m`;
+      const label=layer===0?'':`<div class="dup-label">⚠ Duplikat ke-${layer} (muncul di ≥${layer+1} file)</div>`;
+      barsHTML+=`<div>${label}<div class="bar-row"><div class="bar-track">${track}</div><div class="bar-meta">${meta}</div></div></div>`;
+    }
+
+    const block=document.createElement('div');
+    block.className='seg-block';
+    block.innerHTML=`
+      <div class="seg-header">
+        <div><div class="seg-name">${seg.name}</div><div class="seg-sub">${seg.len.toLocaleString('id')} m total &nbsp;|&nbsp; ${allKPs.length} titik KP unik</div></div>
+        <div></div>
+        <div><div class="seg-val">${meterSeg.toLocaleString('id')} m</div><div class="seg-pct">${pct}% dari ${seg.len.toLocaleString('id')} m</div></div>
+      </div>
+      <div class="bars-area">${barsHTML}</div>`;
+    area.appendChild(block);
+  });
+
+  const tp=(totalMeter/totalLen*100).toFixed(2);
+  document.getElementById('total-bar').innerHTML=`<div class="blok" style="left:0;width:${Math.min(tp,100)}%"></div>`;
+  document.getElementById('total-m').textContent=`${totalMeter.toLocaleString('id')} / ${totalLen.toLocaleString('id')} m`;
+  document.getElementById('total-p').textContent=`${tp}%`;
+
+  const nFinding=masterData.filter(d=>(d[ANA_COL]||'').toString().trim()==='Ada Pelanggaran').length;
+  document.getElementById('info-area').innerHTML=`
+    <div class="info-bar">
+      <strong>${masterData.length}</strong> baris &nbsp;|&nbsp;
+      <strong>${fileStore.length}</strong> file &nbsp;|&nbsp;
+      KP: <strong>${KP_COL}</strong> &nbsp;|&nbsp;
+      Segment: <strong>${SEG_COL}</strong> &nbsp;|&nbsp;
+      Finding: <strong style="color:#f85149">${nFinding}</strong>
+    </div>`;
+}
+
+render('all');
+</script>
+</body>
+</html>
