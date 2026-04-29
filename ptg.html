@@ -31,10 +31,14 @@ body{background:var(--bg);color:var(--text);font-family:sans-serif;padding:16px}
 .bar-meta{width:185px;font-size:11px;color:var(--muted);white-space:nowrap}
 .dup-label{font-size:10px;color:var(--muted);margin-bottom:2px;padding-left:1px}
 .blok{position:absolute;height:100%;background:var(--blue);opacity:.85}
-.total-row{margin-top:22px;padding-top:16px;border-top:2px solid var(--border)}
+.stats-card{display:flex;gap:10px;flex-wrap:wrap}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;flex:1;min-width:160px}
+.sc-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.sc-val{font-size:22px;font-weight:800;line-height:1}
+.sc-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.sc-blue{color:var(--blue)}.sc-green{color:#3fb950}.sc-red{color:#f85149}.sc-yellow{color:#d29922}
 .empty{color:var(--muted);font-size:12px;font-style:italic;padding:6px 0}
 
-/* File panel — di bawah, tidak ikut print */
 .file-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin-top:12px}
 .file-panel-title{font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .file-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;margin-bottom:4px;background:#21262d;border:1px solid var(--border)}
@@ -46,67 +50,22 @@ body{background:var(--bg);color:var(--text);font-family:sans-serif;padding:16px}
 .file-del:hover{background:#3d1a1a;color:#f85149}
 .no-file{font-size:12px;color:var(--muted);font-style:italic}
 
-/* ── PRINT ── */
 @media print{
   @page{margin:15mm}
-  body{
-    background:#fff !important;
-    color:#000 !important;
-    padding:0;
-    -webkit-print-color-adjust:exact;
-    print-color-adjust:exact;
-  }
-  /* Sembunyikan kontrol & file panel */
-  .header .hbtns,
-  .tabs,
-  .info-bar,
-  .file-panel{ display:none !important }
-
-  .header{
-    background:#fff !important;
-    border:1px solid #ccc !important;
-    border-radius:6px;
-    padding:10px 14px;
-  }
+  body{background:#fff !important;color:#000 !important;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .header .hbtns,.tabs,.info-bar,.file-panel{display:none !important}
+  .header{background:#fff !important;border:1px solid #ccc !important;border-radius:6px;padding:10px 14px;}
   .header h2{color:#000 !important;font-size:14px}
-
-  .wrap,.box{
-    max-width:100%;
-    background:#fff !important;
-    border:1px solid #ccc !important;
-    border-radius:6px;
-    padding:12px 16px;
-  }
-
+  .wrap,.box{max-width:100%;background:#fff !important;border:1px solid #ccc !important;border-radius:6px;padding:12px 16px;}
   .seg-name{color:#000 !important}
   .seg-sub,.seg-pct,.bar-meta,.dup-label,.empty{color:#555 !important}
   .seg-val{color:#000 !important}
-
-  /* Track bar */
-  .bar-track{
-    background:#e8e8e8 !important;
-    border:1px solid #ccc !important;
-  }
-
-  /* Blok tersurvei — tetap biru */
-  .blok{
-    background:#2f81f7 !important;
-    opacity:1 !important;
-    -webkit-print-color-adjust:exact;
-    print-color-adjust:exact;
-  }
-
-  /* Total bar track */
-  #total-bar{
-    background:#e8e8e8 !important;
-    border:1px solid #ccc !important;
-  }
-
+  .bar-track{background:#e8e8e8 !important;border:1px solid #ccc !important;}
+  .blok{background:#2f81f7 !important;opacity:1 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  #total-bar{background:#e8e8e8 !important;border:1px solid #ccc !important;}
   .total-row{border-top:2px solid #ccc !important}
   #total-m{color:#2f81f7 !important}
   #total-p{color:#555 !important}
-
-  /* Divider antar segment */
   .seg-block{border-bottom:1px solid #eee;padding-bottom:12px;margin-bottom:12px}
   .seg-block:last-child{border-bottom:none}
 }
@@ -114,7 +73,6 @@ body{background:var(--bg);color:var(--text);font-family:sans-serif;padding:16px}
 </head>
 <body>
 <div class="wrap">
-  <!-- HEADER -->
   <div class="header">
     <div><h2>📍 MONITORING JALUR ROW</h2></div>
     <div class="hbtns">
@@ -125,30 +83,19 @@ body{background:var(--bg);color:var(--text);font-family:sans-serif;padding:16px}
     </div>
   </div>
 
-  <!-- TABS -->
   <div class="tabs">
     <button class="tab active" onclick="switchTab('all',this)">Monitoring Jalur</button>
     <button class="tab" onclick="switchTab('Bersemak',this)">Data Bersemak</button>
     <button class="tab" onclick="switchTab('Ada Pelanggaran',this)">Finding</button>
   </div>
 
-  <!-- KONTEN UTAMA (ikut print) -->
+  <div id="stats-bar" style="display:none;margin-bottom:12px"></div>
+
   <div class="box">
     <div id="info-area"></div>
     <div id="display"></div>
-    <div class="total-row">
-      <div style="display:grid;grid-template-columns:175px 1fr 185px;gap:14px;align-items:center;color:var(--blue)">
-        <div style="font-size:13px;font-weight:700">TOTAL PROGRESS</div>
-        <div class="bar-track" style="height:32px" id="total-bar"></div>
-        <div>
-          <div style="font-size:13px;font-weight:700" id="total-m">0 m</div>
-          <div style="font-size:11px;color:var(--muted)" id="total-p">0%</div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- FILE PANEL — di bawah, tidak ikut print -->
   <div class="file-panel">
     <div class="file-panel-title">📁 File yang diimport</div>
     <div id="file-list-ui"><div class="no-file">Belum ada file diimport</div></div>
@@ -157,18 +104,18 @@ body{background:var(--bg);color:var(--text);font-family:sans-serif;padding:16px}
 
 <script>
 const SEGS=[
-  {name:"Segment 1",    len:2000},
-  {name:"Segment 2",    len:16600},
-  {name:"Segment 3",    len:56800},
-  {name:"Segment 4",    len:33600},
-  {name:"Segment 5",    len:12900},
-  {name:"Segment 6",    len:39500},
-  {name:"Segment 7",    len:47000},
-  {name:"Segment 8",    len:12800},
-  {name:"Segment 9",    len:9000},
-  {name:"Segment 10/12",len:36700},
-  {name:"Segment 11a",  len:12000},
-  {name:"Segment 11b",  len:26500}
+  {name:"Segment 1",    len:2000,  kpStart:0},
+  {name:"Segment 2",    len:16600, kpStart:0},
+  {name:"Segment 3",    len:56800, kpStart:0},
+  {name:"Segment 4",    len:33600, kpStart:0},
+  {name:"Segment 5",    len:12900, kpStart:0},
+  {name:"Segment 6",    len:39500, kpStart:0},
+  {name:"Segment 7",    len:47000, kpStart:0},
+  {name:"Segment 8",    len:12800, kpStart:0},
+  {name:"Segment 9",    len:9000,  kpStart:0},
+  {name:"Segment 10/12",len:36700, kpStart:0},
+  {name:"Segment 11a",  len:12000, kpStart:0},
+  {name:"Segment 11b",  len:26500, kpStart:0}
 ];
 const INTERVAL=100;
 let fileStore=[];
@@ -195,13 +142,37 @@ function cluster(arr){
   }
   res.push(cur);return res;
 }
-function renderTrack(kpArr,kpMin,segLen){
+
+// ✅ PERBAIKAN: hitung meter cluster = akhir - awal
+// 1 titik = 0 meter (belum bergerak), 2 titik berurutan = 100m, dst.
+function clusterMeter(cl){
+  return cl[cl.length-1] - cl[0]; // span antar titik terluar; 1 titik → 0
+}
+
+function renderTrack(kpArr,kpStart,segLen){
+  // kpStart = KP awal segment (bukan kpMin dari data)
   return cluster(kpArr).map(cl=>{
-    const left=Math.max(0,((cl[0]-kpMin)/segLen)*100);
-    const w=Math.max(0.4,((cl[cl.length-1]-cl[0]+INTERVAL)/segLen)*100);
-    const tip=cl.length===1?`KP ${cl[0]}`:`KP ${cl[0]}–${cl[cl.length-1]} (${cl.length*INTERVAL}m)`;
+    const meter=clusterMeter(cl);
+    const left=Math.max(0,((cl[0]-kpStart)/segLen)*100);
+    const w=Math.max(0.4,(Math.max(meter,1)/segLen)*100);
+    const tip=cl.length===1
+      ? `KP ${formatKP(cl[0])} (0m)`
+      : `KP ${formatKP(cl[0])}–${formatKP(cl[cl.length-1])} (${meter}m)`;
     return`<div class="blok" title="${tip}" style="left:${left.toFixed(3)}%;width:${Math.min(w,100-left).toFixed(3)}%"></div>`;
   }).join('');
+}
+
+// ✅ PERBAIKAN: total meter segment = jumlah meter tiap cluster
+function hitungMeterSegmen(allKPs){
+  if(!allKPs.length) return 0;
+  const cls=cluster(allKPs);
+  return cls.reduce((sum,cl)=>sum+clusterMeter(cl),0);
+}
+
+function formatKP(m){
+  const km=Math.floor(m/1000);
+  const meter=m%1000;
+  return `${km}+${meter.toString().padStart(3,'0')}`;
 }
 
 document.getElementById('upload').addEventListener('change',async function(e){
@@ -257,9 +228,7 @@ function render(mode){
 
   if(!masterData.length){
     area.innerHTML='<div class="empty">Belum ada data. Import file Excel terlebih dahulu.</div>';
-    document.getElementById('total-bar').innerHTML='';
-    document.getElementById('total-m').textContent='0 m';
-    document.getElementById('total-p').textContent='0%';
+    document.getElementById('stats-bar').style.display='none';
     document.getElementById('info-area').innerHTML='';
     return;
   }
@@ -270,6 +239,7 @@ function render(mode){
   const ANA_COL=detectCol(keys,['Analisa ROW','Analisa Row','analisa row','Analisa']);
 
   let totalMeter=0;
+  let meterAman=0, meterBersemak=0, meterFinding=0;
   const totalLen=SEGS.reduce((a,b)=>a+b.len,0);
 
   SEGS.forEach(seg=>{
@@ -303,18 +273,37 @@ function render(mode){
       return;
     }
 
-    const kpMin=allKPs[0];
-    const meterSeg=Math.min(allKPs.length*INTERVAL,seg.len);
+    const kpStart=seg.kpStart;
+    const meterSeg=Math.min(hitungMeterSegmen(allKPs),seg.len);
     const pct=((meterSeg/seg.len)*100).toFixed(1);
     totalMeter+=meterSeg;
 
-    const maxLayers=Math.max(...Object.values(kpFileSet).map(s=>s.size));
+    // Hitung meter per kategori untuk segment ini
+    if(mode==='all'){
+      ['Tidak Ada Temuan','Bersemak','Ada Pelanggaran'].forEach(cat=>{
+        const kpCat=segRows
+          .filter(d=>(d[ANA_COL]||'').toString().trim()===cat)
+          .map(d=>parseKP(d[KP_COL])).filter(k=>k!==null);
+        const unikCat=[...new Set(kpCat)].sort((a,b)=>a-b);
+        const m=hitungMeterSegmen(unikCat);
+        if(cat==='Tidak Ada Temuan') meterAman+=m;
+        else if(cat==='Bersemak') meterBersemak+=m;
+        else meterFinding+=m;
+      });
+    }
+
+    // Untuk tab Bersemak/Finding: tidak perlu tampilkan duplikat, cukup 1 layer
+    const maxLayers = mode==='all'
+      ? Math.max(...Object.values(kpFileSet).map(s=>s.size))
+      : 1;
     let barsHTML='';
     for(let layer=0;layer<maxLayers;layer++){
       const kpLayer=allKPs.filter(kp=>kpFileSet[kp].size>layer);
       if(!kpLayer.length)continue;
-      const track=renderTrack(kpLayer,kpMin,seg.len);
-      const meta=`${kpLayer.length} titik · ${(kpLayer.length*INTERVAL).toLocaleString('id')} m`;
+      const track=renderTrack(kpLayer,kpStart,seg.len);
+      // ✅ PERBAIKAN: meta juga pakai hitungMeterSegmen
+      const meterLayer=hitungMeterSegmen(kpLayer);
+      const meta=`${kpLayer.length} titik · ${meterLayer.toLocaleString('id')} m`;
       const label=layer===0?'':`<div class="dup-label">⚠ Duplikat ke-${layer} (muncul di ≥${layer+1} file)</div>`;
       barsHTML+=`<div>${label}<div class="bar-row"><div class="bar-track">${track}</div><div class="bar-meta">${meta}</div></div></div>`;
     }
@@ -332,18 +321,48 @@ function render(mode){
   });
 
   const tp=(totalMeter/totalLen*100).toFixed(2);
-  document.getElementById('total-bar').innerHTML=`<div class="blok" style="left:0;width:${Math.min(tp,100)}%"></div>`;
-  document.getElementById('total-m').textContent=`${totalMeter.toLocaleString('id')} / ${totalLen.toLocaleString('id')} m`;
-  document.getElementById('total-p').textContent=`${tp}%`;
 
   const nFinding=masterData.filter(d=>(d[ANA_COL]||'').toString().trim()==='Ada Pelanggaran').length;
+  const nBersemak=masterData.filter(d=>(d[ANA_COL]||'').toString().trim()==='Bersemak').length;
+  const nAman=masterData.filter(d=>(d[ANA_COL]||'').toString().trim()==='Tidak Ada Temuan').length;
+
+  // Hitung titik unik per kategori
+  const totalTitik=[...new Set(masterData.map(d=>d[SEG_COL]+'_'+d[KP_COL]))].length;
+  const titikAman=[...new Set(masterData.filter(d=>(d[ANA_COL]||'').trim()==='Tidak Ada Temuan').map(d=>d[SEG_COL]+'_'+d[KP_COL]))].length;
+  const titikBersemak=[...new Set(masterData.filter(d=>(d[ANA_COL]||'').trim()==='Bersemak').map(d=>d[SEG_COL]+'_'+d[KP_COL]))].length;
+  const titikFinding=[...new Set(masterData.filter(d=>(d[ANA_COL]||'').trim()==='Ada Pelanggaran').map(d=>d[SEG_COL]+'_'+d[KP_COL]))].length;
+
+  const statsEl=document.getElementById('stats-bar');
+  statsEl.style.display='block';
+  statsEl.innerHTML=`<div class="stats-card">
+    <div class="sc">
+      <div class="sc-label">📏 Total Penyisiran</div>
+      <div class="sc-val sc-blue">${totalMeter.toLocaleString('id')} m</div>
+      <div class="sc-sub">${totalTitik.toLocaleString('id')} titik terpantau</div>
+    </div>
+    <div class="sc">
+      <div class="sc-label">✅ Jalur Aman</div>
+      <div class="sc-val sc-green">${meterAman.toLocaleString('id')} m</div>
+      <div class="sc-sub">${titikAman.toLocaleString('id')} titik terpantau</div>
+    </div>
+    <div class="sc">
+      <div class="sc-label">🌿 Bersemak</div>
+      <div class="sc-val sc-yellow">${meterBersemak.toLocaleString('id')} m</div>
+      <div class="sc-sub">${titikBersemak.toLocaleString('id')} titik terpantau</div>
+    </div>
+    <div class="sc">
+      <div class="sc-label">🚨 Finding</div>
+      <div class="sc-val sc-red">${meterFinding.toLocaleString('id')} m</div>
+      <div class="sc-sub">${titikFinding.toLocaleString('id')} titik terpantau</div>
+    </div>
+  </div>`;
+
   document.getElementById('info-area').innerHTML=`
     <div class="info-bar">
       <strong>${masterData.length}</strong> baris &nbsp;|&nbsp;
       <strong>${fileStore.length}</strong> file &nbsp;|&nbsp;
       KP: <strong>${KP_COL}</strong> &nbsp;|&nbsp;
-      Segment: <strong>${SEG_COL}</strong> &nbsp;|&nbsp;
-      Finding: <strong style="color:#f85149">${nFinding}</strong>
+      Segment: <strong>${SEG_COL}</strong>
     </div>`;
 }
 
